@@ -1,0 +1,124 @@
+/* Reset and full screen setup */
+html, body, #root {
+  margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+  background-color: #1a4a38; color: white; font-family: sans-serif;
+}
+
+/* New Grid Layout for 4-Sided Hands */
+.game-layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* Lets the hand shrink/grow naturally */
+  grid-template-columns: 80px 1fr 80px; 
+  height: 100vh;
+  width: 100vw;
+}
+
+/* The Dark Zones for opponent hands */
+.zone-top { 
+  grid-area: 1 / 2 / 2 / 3; 
+  background-color: rgba(0, 0, 0, 0.2); 
+  display: flex; justify-content: center; align-items: center; 
+  border-bottom: 1px solid rgba(0,0,0,0.5); 
+  padding-top: 10px;
+}
+.zone-left { 
+  grid-area: 2 / 1 / 3 / 2; 
+  background-color: rgba(0, 0, 0, 0.2); 
+  display: flex; align-items: center; justify-content: center; 
+  border-right: 1px solid rgba(0,0,0,0.5); 
+}
+.zone-right { 
+  grid-area: 2 / 3 / 3 / 4; 
+  background-color: rgba(0, 0, 0, 0.2); 
+  display: flex; align-items: center; justify-content: center; 
+  border-left: 1px solid rgba(0,0,0,0.5); 
+}
+.zone-bottom { 
+  grid-area: 3 / 1 / 4 / 4; 
+  background-color: rgba(0, 0, 0, 0.4); 
+  display: flex; justify-content: center; align-items: flex-end; 
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.2); 
+  z-index: 10; 
+  padding-bottom: 20px;
+}
+
+/* The Table Area (Inside the Grid) */
+.play-area {
+  grid-area: 2 / 2 / 3 / 3;
+  display: flex; flex-direction: row; gap: 15px;
+  padding: 10px 20px;
+  min-height: 0; min-width: 0; /* CRITICAL FOR RESPONSIVENESS */
+}
+
+.meld-zone {
+  flex: 1; 
+  background: rgba(0, 0, 0, 0.15); 
+  border-radius: 12px; 
+  padding: 15px;
+  display: flex; flex-direction: column;
+  min-height: 0; min-width: 0; /* CRITICAL FOR SCROLLING */
+}
+
+/* FIX: THE SCROLLING CONTAINER (Keeps columns side-by-side) */
+.meld-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto; /* Allows smooth horizontal scrolling if absolutely needed */
+  display: flex; 
+  flex-direction: row; 
+  flex-wrap: nowrap; /* Forces them to stay in one line! */
+  gap: 12px; 
+  align-items: flex-start;
+  padding-bottom: 20px;
+}
+
+.center-spine {
+  /* Width is handled dynamically in React now */
+  background-color: rgba(0, 0, 0, 0.2); 
+  border-left: 2px solid rgba(0,0,0,0.3); border-right: 2px solid rgba(0,0,0,0.3);
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; 
+  padding: 15px;
+}
+
+.discard-drop-zone {
+  /* Removed hardcoded width/height so React's uiScale can scale it perfectly */
+  border: 2px dashed rgba(255,255,255,0.4);
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-button, .pile-button {
+  background: none; border: none; padding: 0; cursor: pointer; transition: transform 0.2s;
+}
+.deck-button:hover, .pile-button:hover { transform: scale(1.02); }
+
+.pile-take-btn {
+  background: #ffcc00; color: #000; font-weight: bold; border: none;
+  padding: 5px 10px; border-radius: 4px; cursor: pointer;
+}
+
+.inspect-btn {
+  background: rgba(255,255,255,0.2); color: white;
+  border: 1px solid white; border-radius: 4px; padding: 5px; cursor: pointer; font-size: 11px;
+}
+
+.pile-modal {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.8); z-index: 1000; display: flex;
+  justify-content: center; align-items: center;
+}
+
+.pile-content {
+  background: #1a4a38; padding: 30px; border: 2px solid white; border-radius: 10px; text-align: center;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }

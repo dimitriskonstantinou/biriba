@@ -3,7 +3,8 @@ import { io } from 'socket.io-client'
 import { motion } from 'framer-motion'
 import './App.css'
 
-const socket = io('http://localhost:3000');
+//const socket = io('http://localhost:3000');
+const socket = io('https://biriba-server.onrender.com');
 
 const sortHand = (cards) => {
   const suitsOrder = ['Spades', 'Hearts', 'Clubs', 'Diamonds', 'Joker'];

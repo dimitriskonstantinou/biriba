@@ -205,6 +205,7 @@ function App() {
   const [mySeat, setMySeat] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [uiScale, setUiScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
   const [roundSummary, setRoundSummary] = useState(null); 
 
   const [inputName, setInputName] = useState("");
@@ -225,8 +226,19 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => {
-      const h = window.innerHeight; const w = window.innerWidth;
-      if (h < 650 || w < 1000) setUiScale(0.65); else if (h < 800 || w < 1200) setUiScale(0.75); else if (h < 950 || w < 1400) setUiScale(0.85); else setUiScale(1);                  
+      const h = window.innerHeight; 
+      const w = window.innerWidth;
+      
+      // 1. Check if it's a phone first
+      const mobileCheck = w < 800;
+      setIsMobile(mobileCheck);
+      
+      // 2. Apply the correct scale ONLY ONCE
+      if (mobileCheck) setUiScale(0.55); 
+      else if (h < 650 || w < 1000) setUiScale(0.65); 
+      else if (h < 800 || w < 1200) setUiScale(0.75); 
+      else if (h < 950 || w < 1400) setUiScale(0.85); 
+      else setUiScale(1);                  
     };
     window.addEventListener('resize', handleResize);
     handleResize(); 
@@ -346,11 +358,12 @@ function App() {
     if (!gameState.gameStarted) {
       return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', backgroundColor: '#0f3822' }}>
-          <h1 style={{ fontSize: '40px', marginBottom: '20px' }}>Biriba Game Lobby</h1>
+          {/* 🌟 FIX: Force white text to fight Dark Mode extensions */}
+          <h1 style={{ fontSize: '40px', marginBottom: '20px', color: '#ffffff', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Biriba Game Lobby</h1>
           <div style={{ background: 'rgba(0,0,0,0.5)', padding: '10px 30px', borderRadius: '20px', border: '2px solid #ffd700', marginBottom: '40px', fontSize: '20px', fontWeight: 'bold' }}>
             🏆 {team1Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team1 || 0}</span> | {team2Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team2 || 0}</span>
           </div>
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {gameState.players.map((p, index) => (
               <div key={index} style={{
                 width: '180px', height: '220px', borderRadius: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
@@ -407,47 +420,55 @@ function App() {
     const myTurnPhaseStyle = (!isMyTurn || gameState.turnPhase === 'DRAW') ? { opacity: 0.5, pointerEvents: 'none', transition: 'opacity 0.3s' } : { transition: 'opacity 0.3s' };
 
     return (
-      <div className="game-layout">
+      // 🌟 Allow vertical scrolling on mobile
+      <div className="game-layout" style={{ height: '100dvh', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        
         {toastMsg && (
           <motion.div initial={{ opacity: 0, y: -20, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }}
             style={{ position: 'absolute', top: '20px', left: '50%', zIndex: 9999, backgroundColor: '#8b0000', color: 'white', padding: '12px 24px', borderRadius: '8px', border: '1px solid #ff4d4d', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(0,0,0,0.6)', pointerEvents: 'none' }}
           >⚠️ {toastMsg}</motion.div>
         )}
 
+        {/* 🌟 Adjust Top UI for Mobile */}
         <div style={{ position: 'absolute', top: '10px', left: '10px', color: 'yellow', fontWeight: 'bold', zIndex: 1000, fontSize: `${18 * uiScale}px`, textShadow: '2px 2px 4px black' }}>
           {isMyTurn ? "🔥 YOUR TURN" : `Waiting for ${gameState.players[gameState.activePlayerIndex]?.name || 'Opponent'}...`}
         </div>
+        {!isMobile && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', color: 'white', fontWeight: 'bold', zIndex: 1000, fontSize: `${16 * uiScale}px`, backgroundColor: 'rgba(0,0,0,0.7)', padding: `${8 * uiScale}px ${16 * uiScale}px`, borderRadius: '20px', border: '2px solid #ffd700', boxShadow: '0 4px 8px rgba(0,0,0,0.5)' }}>
+            🏆 OVERALL: {team1Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team1 || 0}</span> | {team2Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team2 || 0}</span>
+          </div>
+        )}
 
-        <div style={{ position: 'absolute', top: '10px', right: '10px', color: 'white', fontWeight: 'bold', zIndex: 1000, fontSize: `${16 * uiScale}px`, backgroundColor: 'rgba(0,0,0,0.7)', padding: `${8 * uiScale}px ${16 * uiScale}px`, borderRadius: '20px', border: '2px solid #ffd700', boxShadow: '0 4px 8px rgba(0,0,0,0.5)' }}>
-          🏆 OVERALL: {team1Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team1 || 0}</span> | {team2Names}: <span style={{color: '#ffd700'}}>{gameState.totalScores?.team2 || 0}</span>
-        </div>
+        {/* 🌟 MOBILE OPPONENT GROUPING */}
+        {isMobile ? (
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-evenly', paddingTop: '60px', paddingBottom: '15px' }}>
+            <OpponentHand count={leftOpponent.cardCount} position="top" active={gameState.activePlayerIndex === leftSeat} label={leftOpponent.name || "Left"} scale={uiScale} />
+            <OpponentHand count={topOpponent.cardCount} position="top" active={gameState.activePlayerIndex === topSeat} label={topOpponent.name || "Top"} scale={uiScale} />
+            <OpponentHand count={rightOpponent.cardCount} position="top" active={gameState.activePlayerIndex === rightSeat} label={rightOpponent.name || "Right"} scale={uiScale} />
+          </div>
+        ) : (
+          <>
+            <div className="zone-top"><OpponentHand count={topOpponent.cardCount} position="top" active={gameState.activePlayerIndex === topSeat} label={topOpponent.name || "Teammate"} scale={uiScale} /></div>
+            <div className="zone-left"><OpponentHand count={leftOpponent.cardCount} position="left" active={gameState.activePlayerIndex === leftSeat} label={leftOpponent.name || "Enemy L"} scale={uiScale} /></div>
+            <div className="zone-right"><OpponentHand count={rightOpponent.cardCount} position="right" active={gameState.activePlayerIndex === rightSeat} label={rightOpponent.name || "Enemy R"} scale={uiScale} /></div>
+          </>
+        )}
 
-        <div className="zone-top"><OpponentHand count={topOpponent.cardCount} position="top" active={gameState.activePlayerIndex === topSeat} label={topOpponent.name || "Teammate"} scale={uiScale} /></div>
-        <div className="zone-left"><OpponentHand count={leftOpponent.cardCount} position="left" active={gameState.activePlayerIndex === leftSeat} label={leftOpponent.name || "Enemy L"} scale={uiScale} /></div>
-        <div className="zone-right"><OpponentHand count={rightOpponent.cardCount} position="right" active={gameState.activePlayerIndex === rightSeat} label={rightOpponent.name || "Enemy R"} scale={uiScale} /></div>
-
-        <div className="play-area">
-          <div className="meld-zone">
+        {/* 🌟 DYNAMIC PLAY AREA (Stacks vertically on phone) */}
+        <div className="play-area" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', width: '100%', gap: isMobile ? '30px' : '0', position: isMobile ? 'relative' : 'absolute', top: isMobile ? '0' : '50%', transform: isMobile ? 'none' : 'translateY(-50%)' }}>
+          
+          <div className="meld-zone" style={{ width: isMobile ? '95vw' : 'auto' }}>
             <h3 style={{marginBottom: `${10 * uiScale}px`, textAlign: 'center', fontSize: `${18 * uiScale}px`}}>ENEMY MELDS</h3>
-            <div className="meld-scroll">
+            <div className="meld-scroll" style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', overflowX: isMobile ? 'auto' : 'visible', gap: '10px', paddingBottom: '15px' }}>
               {enemyMelds.map((meld, index) => {
-                const score = calculateMeldScore(meld, gameState.kozerSuit);
-                const status = getMeldStatus(meld, gameState.kozerSuit);
-                
-                let badgeColor = 'rgba(0,0,0,0.6)'; let textColor = 'white';
-                if (meld.length >= 7) {
-                    badgeColor = status.isClean ? '#4CAF50' : '#ffd700'; // Green if clean, Yellow if dirty
-                    textColor = 'black';
-                }
-
+                const score = calculateMeldScore(meld, gameState.kozerSuit); const status = getMeldStatus(meld, gameState.kozerSuit);
+                let badgeColor = 'rgba(0,0,0,0.6)'; let textColor = 'white'; if (meld.length >= 7) { badgeColor = status.isClean ? '#4CAF50' : '#ffd700'; textColor = 'black'; }
+                const lockedStyle = status.isComplete ? { opacity: 0.8, border: '2px solid #ffd700', backgroundColor: 'rgba(255,215,0,0.05)' } : { border: '1px solid rgba(255,255,255,0.1)' };
                 return (
-                  <div key={index} style={{ minWidth: `${enemyScale.width + (24 * uiScale)}px`, minHeight: `${enemyScale.height + (80 * uiScale)}px`, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: `${25 * uiScale}px ${12 * uiScale}px ${50 * uiScale}px ${12 * uiScale}px`, position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                  <div key={index} style={{ minWidth: `${enemyScale.width + (24 * uiScale)}px`, minHeight: `${enemyScale.height + (80 * uiScale)}px`, borderRadius: '6px', padding: `${25 * uiScale}px ${12 * uiScale}px ${50 * uiScale}px ${12 * uiScale}px`, position: 'relative', display: 'flex', justifyContent: 'center', ...lockedStyle }}>
                     <MeldColumn meldCards={meld} scaleData={enemyScale} />
-                    
-                    {/* 🌟 NEW: Color Coded Badge & Lock Icon */}
-                    <div style={{ position: 'absolute', bottom: `${15 * uiScale}px`, left: '50%', transform: 'translateX(-50%)', backgroundColor: badgeColor, color: textColor, padding: '2px 8px', borderRadius: '12px', fontSize: `${12 * uiScale}px`, fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap' }}>
-                      {status.isComplete && <span style={{marginRight: '4px'}}>🔒</span>}
-                      {score} pts
+                    <div style={{ position: 'absolute', bottom: `${15 * uiScale}px`, left: '50%', transform: 'translateX(-50%)', backgroundColor: badgeColor, color: textColor, padding: '4px 10px', borderRadius: '12px', fontSize: `${12 * uiScale}px`, fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      {status.isComplete && <span>🔒</span>} <span>{score} pts</span>
                     </div>
                   </div>
                 );
@@ -455,94 +476,63 @@ function App() {
             </div>
           </div>
           
-          <div className="center-spine" style={{ width: `${160 * uiScale}px` }}>
-            <div style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid #ffd700', borderRadius: '8px', padding: `${6 * uiScale}px ${16 * uiScale}px`, marginBottom: `${15 * uiScale}px`, textAlign: 'center', boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)' }}>
+          <div className="center-spine" style={{ width: isMobile ? '95vw' : `${160 * uiScale}px`, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+            <div style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid #ffd700', borderRadius: '8px', padding: `${6 * uiScale}px ${16 * uiScale}px`, textAlign: 'center', boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)' }}>
               <div style={{ fontSize: `${10 * uiScale}px`, color: '#ffd700', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Kozer</div>
-              {gameState.kozerSuit ? (
-                <div style={{ fontSize: `${28 * uiScale}px`, color: ['Hearts', 'Diamonds'].includes(gameState.kozerSuit) ? '#ff4444' : '#ffffff', textShadow: '1px 1px 2px black', lineHeight: '1' }}>
-                  {gameState.kozerSuit === 'Hearts' ? '♥' : gameState.kozerSuit === 'Diamonds' ? '♦' : gameState.kozerSuit === 'Spades' ? '♠' : '♣'}
-                </div>
-              ) : ( <div style={{ fontSize: `${12 * uiScale}px`, color: '#ccc', marginTop: '4px' }}>NONE</div> )}
+              {gameState.kozerSuit ? ( <div style={{ fontSize: `${28 * uiScale}px`, color: ['Hearts', 'Diamonds'].includes(gameState.kozerSuit) ? '#ff4444' : '#ffffff', textShadow: '1px 1px 2px black', lineHeight: '1' }}>{gameState.kozerSuit === 'Hearts' ? '♥' : gameState.kozerSuit === 'Diamonds' ? '♦' : gameState.kozerSuit === 'Spades' ? '♠' : '♣'}</div> ) : ( <div style={{ fontSize: `${12 * uiScale}px`, color: '#ccc', marginTop: '4px' }}>NONE</div> )}
             </div>
-
-            <div style={{ display: 'flex', gap: `${15 * uiScale}px`, marginBottom: `${20 * uiScale}px`, height: `${125 * uiScale}px` }}>
+            <div style={{ display: 'flex', gap: `${15 * uiScale}px` }}>
               {gameState.birimbakia?.team1 > 0 && <FaceDownCard label="Μπιριμπάκι 1" large scale={uiScale} />}
               {gameState.birimbakia?.team2 > 0 && <FaceDownCard label="Μπιριμπάκι 2" large scale={uiScale} />}
             </div>
-
             {gameState.deckCount > 0 ? (
-              <div 
-                onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('draw_from_deck') }} 
-                style={{ cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'default', filter: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'drop-shadow(0px 0px 8px rgba(255, 255, 0, 0.9))' : 'none', opacity: (isMyTurn && gameState.turnPhase === 'DRAW') ? 1 : 0.5, transition: '0.3s' }}
-              >
+              <div onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('draw_from_deck') }} style={{ cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'default', filter: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'drop-shadow(0px 0px 8px rgba(255, 255, 0, 0.9))' : 'none', opacity: (isMyTurn && gameState.turnPhase === 'DRAW') ? 1 : 0.5, transition: '0.3s' }}>
                 <FaceDownCard label={`DECK (${gameState.deckCount})`} horizontal scale={uiScale} />
               </div>
             ) : (
-              <div onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('end_round_empty_deck') }} style={{ background: '#d32f2f', color: 'white', border: '2px solid white', borderRadius: '8px', cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'not-allowed', width: `${110 * uiScale}px`, height: `${80 * uiScale}px`, display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(0,0,0,0.5)', opacity: (isMyTurn && gameState.turnPhase === 'DRAW') ? 1 : 0.5, fontWeight: 'bold', fontSize: `${14 * uiScale}px`, textShadow: '1px 1px 2px black' }}>
-                END GAME
-              </div>
+              <div onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('end_round_empty_deck') }} style={{ background: '#d32f2f', color: 'white', border: '2px solid white', borderRadius: '8px', cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'not-allowed', width: `${110 * uiScale}px`, height: `${80 * uiScale}px`, display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(0,0,0,0.5)', opacity: (isMyTurn && gameState.turnPhase === 'DRAW') ? 1 : 0.5, fontWeight: 'bold', fontSize: `${14 * uiScale}px` }}>END GAME</div>
             )}
-            
-            <div 
-              data-zone="discard" 
-              onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('draw_from_discard') }} 
-              style={{ marginTop: `${10 * uiScale}px`, width: `${120 * uiScale}px`, height: `${160 * uiScale}px`, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '8px', border: topDiscardCard ? 'none' : '2px dashed rgba(255,255,255,0.4)', backgroundColor: topDiscardCard ? 'transparent' : 'rgba(0,0,0,0.2)', cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'default', filter: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'drop-shadow(0px 0px 8px rgba(255, 255, 0, 0.9))' : 'none', opacity: 1, pointerEvents: 'auto', transition: '0.3s' }}
-            >
+            <div data-zone="discard" onClick={() => { if(isMyTurn && gameState.turnPhase === 'DRAW') socket.emit('draw_from_discard') }} style={{ width: `${120 * uiScale}px`, height: `${160 * uiScale}px`, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '8px', border: topDiscardCard ? 'none' : '2px dashed rgba(255,255,255,0.4)', backgroundColor: topDiscardCard ? 'transparent' : 'rgba(0,0,0,0.2)', cursor: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'pointer' : 'default', filter: (isMyTurn && gameState.turnPhase === 'DRAW') ? 'drop-shadow(0px 0px 8px rgba(255, 255, 0, 0.9))' : 'none', opacity: 1, pointerEvents: 'auto', transition: '0.3s' }}>
               <div className="discard-drop-zone" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' }}>
                 {topDiscardCard ? <StaticCard card={topDiscardCard} width={`${80 * uiScale}px`} height={`${120 * uiScale}px`} /> : <div style={{fontSize: `${11 * uiScale}px`, color: 'white'}}>DISCARD</div>}
               </div>
             </div>
-            
-            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowFullPile(true); }} style={{ marginTop: `${20 * uiScale}px`, padding: `${8*uiScale}px ${12*uiScale}px`, fontSize: `${12*uiScale}px`, borderRadius: '6px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)', cursor: 'pointer', pointerEvents: 'auto', position: 'relative', zIndex: 100, textAlign: 'center' }}>
+            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowFullPile(true); }} style={{ padding: `${8*uiScale}px ${12*uiScale}px`, fontSize: `${12*uiScale}px`, borderRadius: '6px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)', cursor: 'pointer', pointerEvents: 'auto', textAlign: 'center' }}>
               Inspect Pile ({gameState.discardPile.length})
             </div>
-
             {hasSnapshot && isMyTurn && (
-              <div onClick={() => socket.emit('reset_turn')} style={{ marginTop: `${15 * uiScale}px`, padding: `${8*uiScale}px ${12*uiScale}px`, fontSize: `${11*uiScale}px`, background: '#d32f2f', color: 'white', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.5)', textAlign: 'center' }}>
-                🔄 RESET TURN
-              </div>
+              <div onClick={() => socket.emit('reset_turn')} style={{ padding: `${8*uiScale}px ${12*uiScale}px`, fontSize: `${11*uiScale}px`, background: '#d32f2f', color: 'white', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.5)', textAlign: 'center' }}>🔄 RESET</div>
             )}
           </div>
 
-          <div className="meld-zone" style={{ ...myTurnPhaseStyle }}> 
+          <div className="meld-zone" style={{ ...myTurnPhaseStyle, width: isMobile ? '95vw' : 'auto' }}> 
             <h3 style={{marginBottom: `${10 * uiScale}px`, textAlign: 'center', fontSize: `${18 * uiScale}px`}}>OUR MELDS</h3>
-            <div className="meld-scroll">
+            <div className="meld-scroll" style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', overflowX: isMobile ? 'auto' : 'visible', gap: '10px', paddingBottom: '15px' }}>
               {ourMelds.map((meld, index) => {
-                const score = calculateMeldScore(meld, gameState.kozerSuit);
-                const status = getMeldStatus(meld, gameState.kozerSuit);
-                
-                let badgeColor = 'rgba(0,0,0,0.6)'; let textColor = 'white';
-                if (meld.length >= 7) {
-                    badgeColor = status.isClean ? '#4CAF50' : '#ffd700';
-                    textColor = 'black';
-                }
-                
+                const score = calculateMeldScore(meld, gameState.kozerSuit); const status = getMeldStatus(meld, gameState.kozerSuit);
+                let badgeColor = 'rgba(0,0,0,0.6)'; let textColor = 'white'; if (meld.length >= 7) { badgeColor = status.isClean ? '#4CAF50' : '#ffd700'; textColor = 'black'; }
                 const dropProps = status.isComplete ? {} : { "data-zone": "existing_meld", "data-index": index };
                 const lockedStyle = status.isComplete ? { opacity: 0.8, border: '2px solid #ffd700', backgroundColor: 'rgba(255,215,0,0.05)' } : { border: '1px solid rgba(255,255,255,0.1)' };
-
                 return (
-                  <div key={index} {...dropProps} style={{ minWidth: `${tableScale.width + (24 * uiScale)}px`, minHeight: `${tableScale.height + (80 * uiScale)}px`, border: status.isComplete ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: `${25 * uiScale}px ${12 * uiScale}px ${50 * uiScale}px ${12 * uiScale}px`, position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                    {activeUndoColumn === index && (
-                      <div onClick={() => socket.emit('undo_last_move')} style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#d32f2f', color: 'white', borderRadius: '4px', padding: '2px 8px', fontSize: `${9*uiScale}px`, fontWeight: 'bold', cursor: 'pointer', zIndex: 500, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>↩ UNDO</div>
-                    )}
+                  <div key={index} {...dropProps} style={{ minWidth: `${tableScale.width + (24 * uiScale)}px`, minHeight: `${tableScale.height + (80 * uiScale)}px`, borderRadius: '6px', padding: `${25 * uiScale}px ${12 * uiScale}px ${50 * uiScale}px ${12 * uiScale}px`, position: 'relative', display: 'flex', justifyContent: 'center', ...lockedStyle }}>
+                    {activeUndoColumn === index && !status.isComplete && ( <div onClick={() => socket.emit('undo_last_move')} style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#d32f2f', color: 'white', borderRadius: '4px', padding: '2px 8px', fontSize: `${9*uiScale}px`, fontWeight: 'bold', cursor: 'pointer', zIndex: 500, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>↩ UNDO</div> )}
                     <MeldColumn meldCards={meld} scaleData={tableScale} />
-                    
-                    <div style={{ position: 'absolute', bottom: `${15 * uiScale}px`, left: '50%', transform: 'translateX(-50%)', backgroundColor: badgeColor, color: textColor, padding: '2px 8px', borderRadius: '12px', fontSize: `${12 * uiScale}px`, fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap' }}>
-                      {status.isComplete && <span style={{marginRight: '4px'}}>🔒</span>}
-                      {score} pts
+                    <div style={{ position: 'absolute', bottom: `${15 * uiScale}px`, left: '50%', transform: 'translateX(-50%)', backgroundColor: badgeColor, color: textColor, padding: '4px 10px', borderRadius: '12px', fontSize: `${12 * uiScale}px`, fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      {status.isComplete && <span>🔒</span>} <span>{score} pts</span>
                     </div>
                   </div>
                 );
               })}
-              <div data-zone="new_meld" style={{ minWidth: `${tableScale.width + (24 * uiScale)}px`, minHeight: `${tableScale.height + (80 * uiScale)}px`, marginTop: `${25 * uiScale}px`, border: '2px dashed rgba(255,255,255,0.5)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: `${10*uiScale}px`, backgroundColor: 'rgba(0,0,0,0.2)', cursor: 'pointer' }}>
+              <div data-zone="new_meld" style={{ minWidth: `${tableScale.width + (24 * uiScale)}px`, minHeight: `${tableScale.height + (80 * uiScale)}px`, border: '2px dashed rgba(255,255,255,0.5)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: `${10*uiScale}px`, backgroundColor: 'rgba(0,0,0,0.2)', cursor: 'pointer' }}>
                 <span style={{pointerEvents: 'none'}}>START<br/>NEW</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="zone-bottom" style={{ transition: 'opacity 0.3s' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+        {/* 🌟 BOTTOM HAND (Scrollable horizontally) */}
+        <div className="zone-bottom" style={{ transition: 'opacity 0.3s', position: isMobile ? 'relative' : 'absolute', width: isMobile ? '100vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', paddingTop: isMobile ? '20px' : '0', paddingBottom: isMobile ? '80px' : '0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minWidth: 'max-content', padding: '0 20px' }}>
             {sortedHand.map((card, index) => (
               <div key={card.id || `hand-${index}`} style={{ marginLeft: index === 0 ? 0 : dynamicMargin, zIndex: index }}>
                 <Card card={card} onDragEnd={handleDragEnd} scale={uiScale} />
@@ -570,10 +560,15 @@ function App() {
     <>
       {renderGameContent()}
       <div style={{
-        position: 'fixed', bottom: '20px', left: '20px', width: `${260 * uiScale}px`, 
-        height: isChatOpen ? `${300 * uiScale}px` : `${35 * uiScale}px`, 
-        backgroundColor: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', 
-        display: 'flex', flexDirection: 'column', zIndex: 9000, boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+        position: 'fixed', 
+        bottom: isMobile ? '0' : '20px', 
+        left: isMobile ? '0' : '20px', 
+        width: isMobile ? '100vw' : `${260 * uiScale}px`, 
+        height: isChatOpen ? (isMobile ? '40vh' : `${300 * uiScale}px`) : `${35 * uiScale}px`, 
+        backgroundColor: 'rgba(0,0,0,0.85)', 
+        border: '1px solid rgba(255,255,255,0.2)', 
+        borderRadius: isMobile ? '15px 15px 0 0' : '10px', 
+        display: 'flex', flexDirection: 'column', zIndex: 9000, boxShadow: '0 -4px 15px rgba(0,0,0,0.5)',
         backdropFilter: 'blur(5px)', transition: 'height 0.3s ease', overflow: 'hidden'
       }}>
         <div 

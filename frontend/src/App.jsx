@@ -3,8 +3,8 @@ import { io } from 'socket.io-client'
 import { motion } from 'framer-motion'
 import './App.css'
 
-//const socket = io('http://localhost:3000');
-const socket = io('https://biriba.onrender.com/');
+const socket = io('http://localhost:3000');
+//const socket = io('https://biriba.onrender.com/');
 
 const sortHand = (cards) => {
   const suitsOrder = ['Spades', 'Hearts', 'Clubs', 'Diamonds', 'Joker'];
@@ -299,7 +299,7 @@ function App() {
         )}
         <h1 style={{ fontSize: '50px', marginBottom: '30px', textShadow: '2px 2px 5px black' }}>Biriba Online</h1>
         <div style={{ background: 'rgba(0,0,0,0.6)', padding: '40px', borderRadius: '15px', textAlign: 'center', border: '2px solid #ffd700', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-            <h2 style={{ marginBottom: '25px', color: '#ffd700' }}>Enter Your Name</h2>
+            <h2 style={{ marginBottom: '25px', color: '#ffd700' }}>Enter Your Name!!!!!!!</h2>
             <form onSubmit={(e) => { e.preventDefault(); if(inputName.trim()) socket.emit('join_with_name', { name: inputName, sessionId: mySessionId }); }}>
                 <input autoFocus value={inputName} onChange={e=>setInputName(e.target.value)} placeholder="Player Name" style={{ padding: '15px', fontSize: '20px', borderRadius: '8px', border: 'none', marginBottom: '25px', width: '250px', textAlign: 'center', color: 'black' }} />
                 <br/>
